@@ -9,16 +9,11 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import torch.nn.functional as F
 
-def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-
 def open_file(filepath):
 	with open(filepath, 'r', encoding='utf-8') as infile:
 		return infile.read()
 
-openai.api_key = "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"
+openai.api_key = None
 
 def gpt3_embedding(content, engine='text-embedding-ada-002'):
 	content = content.encode(encoding='ASCII',errors='ignore').decode()
@@ -27,6 +22,12 @@ def gpt3_embedding(content, engine='text-embedding-ada-002'):
 	return vector
 
 def mpnet_embedding(content):
+
+	def mean_pooling(model_output, attention_mask):
+	    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+	    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+	    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
 	tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-mpnet-base-v2')
 	model = AutoModel.from_pretrained('sentence-transformers/all-mpnet-base-v2')
 	encoded_input = tokenizer(content, padding=True, truncation=True, return_tensors='pt')
@@ -34,6 +35,8 @@ def mpnet_embedding(content):
 		model_output = model(**encoded_input)
 	embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
 	embedding = F.normalize(embeddings, p=2, dim=1)
+
+	# converted to float, because tensor
 	return [float(x) for x in embedding[0]]
 
 
