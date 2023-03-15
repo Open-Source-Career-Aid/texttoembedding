@@ -65,7 +65,7 @@ if __name__ == '__main__':
         #output = torch.stack([states[i] for i in range(len(states)-1, len(states))])
         output = states[-1]
         output = output.squeeze()
-        #output = torch.mean(output, dim=0)
+        output = torch.mean(output, dim=0)
         #print(output)
         embed_list.append(output)
 
@@ -73,4 +73,4 @@ if __name__ == '__main__':
     output = torch.mean(torch.stack(embed_list),0)
     outfile=str(file_name)+".pt"
     torch.save(output,outfile)
-    # output size (512, 1024)
+    # output size (1024)
